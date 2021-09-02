@@ -1,0 +1,43 @@
+version: "3.3"
+
+services:
+  db:
+    container_name: apiI.db
+    image: mysql:8
+    restart: always
+    ports:
+      - "3309:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: laravelmysql
+      MYSQL_USER: user123
+      MYSQL_PASSWORD: pass123
+
+  nginx:
+    container_name: apiI.nginx
+    build: ./docker/nginx
+    command: nginx -g "daemon off;"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:cached
+      - ./api:/var/www/html/
+    links:
+      - php
+    ports:
+      - "8900:80"
+    depends_on:
+      - db
+
+  php:
+    container_name: apiI.php
+    build: ./docker/php
+    volumes:
+      - ./api:/var/www/html/
+    working_dir: /var/www/html/
+    command: php-fpm
+    links:
+      - db:db
+    ports:
+      - "9009:9000"
+    depends_on:
+      - db
